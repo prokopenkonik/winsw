@@ -154,7 +154,14 @@ namespace winsw.Util
                 }
             }
 
+            processToStart.OutputDataReceived += (s, e) => LogProcessOutput(e.Data, false);
+            processToStart.ErrorDataReceived += (s, e) => LogProcessOutput(e.Data, true);
+
             processToStart.Start();
+
+            processToStart.BeginOutputReadLine();
+            processToStart.BeginErrorReadLine();
+
             Logger.Info("Started process " + processToStart.Id);
 
             if (priority != null && priority.Value != ProcessPriorityClass.Normal) 
@@ -163,11 +170,11 @@ namespace winsw.Util
             }
 
             // Redirect logs if required
-            if (logHandler != null)
-            {
-                Logger.Debug("Forwarding logs of the process " + processToStart + " to " + logHandler);
-                logHandler.log(processToStart.StandardOutput.BaseStream, processToStart.StandardError.BaseStream);
-            }
+ //         if (logHandler != null)
+ //         {
+ //             Logger.Debug("Forwarding logs of the process " + processToStart + " to " + logHandler);
+ //             logHandler.log(processToStart.StandardOutput.BaseStream, processToStart.StandardError.BaseStream);
+ //         }
 
             // monitor the completion of the process
             if (callback != null)
@@ -177,6 +184,20 @@ namespace winsw.Util
                     processToStart.WaitForExit();
                     callback(processToStart);
                 });
+            }
+        }
+
+        private static void LogProcessOutput(string msg, bool isError)
+        {
+            if (!String.IsNullOrEmpty(msg))
+            {
+                if (isError) 
+                {
+                    Logger.Error(msg);
+                } else
+                {
+                    Logger.Debug(msg);
+                }
             }
         }
 
